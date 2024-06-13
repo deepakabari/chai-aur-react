@@ -7,6 +7,7 @@ import "./styles.css";
 
 function TODO() {
     const [todos, setTodos] = useState<Todo[]>([]);
+    const [editingTask, setEditingTask] = useState<Todo | null>(null);
 
     // Retrieve data from localStorage when component mounts
     useEffect(() => {
@@ -25,8 +26,17 @@ function TODO() {
                 todosCompleted={todos_completed}
                 totalTodos={total_todos}
             />
-            <Form todos={todos} setTodos={setTodos} />
-            <TODOList todos={todos} setTodos={setTodos} />
+            <Form
+                todos={todos}
+                setTodos={setTodos}
+                editingTask={editingTask}
+                setEditingTask={setEditingTask}
+            />
+            <TODOList
+                todos={todos}
+                setTodos={setTodos}
+                setEditingTask={setEditingTask}
+            />
         </div>
     );
 }

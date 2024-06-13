@@ -1,7 +1,21 @@
-import { FormEvent } from "react";
+import { FormEvent, useEffect, useRef } from "react";
 import { TODOListProps, Todo } from "../Todo/TODOList";
 
-function Form({ todos, setTodos }: TODOListProps) {
+type FormProps = TODOListProps & {
+    editingTask: Todo | null;
+    setEditingTask: (task: Todo | null) => void;
+};
+
+function Form({ todos, setTodos, editingTask, setEditingTask }: FormProps) {
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (editingTask && inputRef.current) {
+            inputRef.current.value = editingTask.title;
+            inputRef.current.focus();
+        }
+    }, [editingTask]);
+
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         // To prevent to submit the form and reload page
         event.preventDefault();
@@ -11,19 +25,29 @@ function Form({ todos, setTodos }: TODOListProps) {
             'input[name="todo"]'
         ) as HTMLInputElement;
 
-        const value = input.value;
-        const newTodo: Todo = {
-            title: value,
-            id: self.crypto.randomUUID(),
-            isCompleted: false,
-        };
+        const value = input.value.trim();
 
-        // To update todo state
-        setTodos((prevTodos) => [...prevTodos, newTodo]);
+        if (!value) return;
 
-        // Store updated todo list in local storage
-        const updatedTodoList = JSON.stringify([...todos, newTodo]);
-        localStorage.setItem("todos", updatedTodoList);
+        if (editingTask) {
+            const updatedTodos = todos.map((todo) =>
+                todo.id === editingTask.id ? { ...todo, title: value } : todo
+            );
+            setTodos(updatedTodos);
+            localStorage.setItem("todos", JSON.stringify(updatedTodos));
+            setEditingTask(null);
+        } else {
+            const newTodo: Todo = {
+                title: value,
+                id: self.crypto.randomUUID(),
+                isCompleted: false,
+            };
+
+            const updatedTodos = [...todos, newTodo];
+
+            setTodos(updatedTodos);
+            localStorage.setItem("todos", JSON.stringify(updatedTodos));
+        }
 
         // reset the form
         form.reset();
@@ -37,6 +61,7 @@ function Form({ todos, setTodos }: TODOListProps) {
                     name="todo"
                     id="todo"
                     placeholder="Write your next task"
+                    ref={inputRef}
                 />
             </label>
             <button>
